@@ -8,17 +8,24 @@
 
 package gameEngine;
 
+import utils.StochasticActionSampling;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static config.Configuration.ACTION_ARRAY_LENGTH;
+
 public class GameRound {
 
-    private int getPlayNumber() {
+    private String getPlayNumber() {
         return PlayNumber;
     }
 
-    private void setPlayNumber(int playNumber) {
+    private void setPlayNumber(String playNumber) {
         PlayNumber = playNumber;
     }
 
-    private int PlayNumber = -1;
+    private String PlayNumber = "NULL";
 
     private String getOffencePlay() {
         return OffencePlay;
@@ -30,18 +37,40 @@ public class GameRound {
 
     private String OffencePlay = "";
 
+    private Map<String, Double> getAction_probability_map() {
+        return action_probability_map;
+    }
+
+    private void setAction_probability_map() {
+        this.action_probability_map.put("rate_3_shoot", rate_3_shoot);
+        this.action_probability_map.put("rate_2_shoot", rate_2_shoot);
+        this.action_probability_map.put("rate_layup", rate_layup);
+        this.action_probability_map.put("rate_postup", rate_postup);
+        this.action_probability_map.put("rate_fast_break", rate_fast_break);
+        this.action_probability_map.put("rate_alleyoop", rate_alleyoop);
+        this.action_probability_map.put("rate_turnover", rate_turnover);
+    }
+
+    private Map<String, Double> action_probability_map = new HashMap<String, Double>();
+
+    public GameRound()
+    {
+        super();
+        setAction_probability_map();
+    }
+
     /**
      * The probability of making a three-point shot.
      */
-    public static double rate_3_shoot = 0.27;
+    public static double rate_3_shoot = 0.25;
     /**
      * The probability of making a two-point shot.
      */
-    public static double rate_2_shoot = 0.33;
+    public static double rate_2_shoot = 0.31;
     /**
      * The probability of making a break and lay-up.
      */
-    public static double rate_break_layup = 0.15;
+    public static double rate_layup = 0.15;
     /**
      * The probability of making a post-Up (Playing in a position near the basket).
      */
@@ -53,7 +82,11 @@ public class GameRound {
     /**
      * The probability of making a alley oop.
      */
-    public static double rate_alleyoop = 0.01;
+    public static double rate_alleyoop = 0.03;
+    /**
+     * The probability of making a turnover.
+     */
+    public static double rate_turnover = 0.02;
 
     /**
      * Math.random() would generate one double random number;
@@ -65,56 +98,32 @@ public class GameRound {
      */
     private void RandomPlayNumberGenerate()
     {
-        double randomNumber;
+        int randomNumber;
         //The java.lang.Math.random() returns a double value with a positive sign, greater than or equal to 0.0 and less than 1.0.
-        randomNumber = Math.random();
-        if (randomNumber >= 0 && randomNumber < rate_3_shoot)
-            setPlayNumber(0);
-        else if (randomNumber >= rate_3_shoot && randomNumber < rate_3_shoot + rate_2_shoot)
-            setPlayNumber(1);
-        else if (randomNumber >= rate_3_shoot + rate_2_shoot
-                && randomNumber < rate_3_shoot + rate_2_shoot + rate_break_layup)
-            setPlayNumber(2);
-        else if (randomNumber >= rate_3_shoot + rate_2_shoot + rate_break_layup
-                && randomNumber < rate_3_shoot + rate_2_shoot + rate_break_layup + rate_postup)
-            setPlayNumber(3);
-        else if (randomNumber >= rate_3_shoot + rate_2_shoot + rate_break_layup + rate_postup
-                && randomNumber < rate_3_shoot + rate_2_shoot + rate_break_layup + rate_postup + rate_fast_break)
-            setPlayNumber(4);
-        else if (randomNumber >= rate_3_shoot + rate_2_shoot + rate_break_layup + rate_postup + rate_fast_break
-                && randomNumber < rate_3_shoot + rate_2_shoot + rate_break_layup + rate_postup + rate_fast_break
-                + rate_alleyoop)
-            setPlayNumber(5);
-        else
-            setPlayNumber(-1);
+        randomNumber = (int)(Math.random()*ACTION_ARRAY_LENGTH);
+        StochasticActionSampling stochasticActionSampling = new StochasticActionSampling(action_probability_map);
+        String[] result = stochasticActionSampling.getAction_array();
+        setPlayNumber(result[randomNumber]);
     }
 
     private void OffencePlayTransition(){
-        int playNumber = this.getPlayNumber();
-        String offencePlay = "";
-        switch (playNumber) {
-            case -1:
-                offencePlay = "进攻失误";
-                break;
-            case 0:
-                offencePlay = "三分投篮";
-                break;
-            case 1:
-                offencePlay = "两分投篮";
-                break;
-            case 2:
-                offencePlay = "上篮";
-                break;
-            case 3:
-                offencePlay = "内线单打";
-                break;
-            case 4:
-                offencePlay = "快攻";
-                break;
-            case 5:
-                offencePlay = "空中接力";
-                break;
-        }
+        String playNumber = this.getPlayNumber();
+        String offencePlay;
+        if ("rate_3_shoot".equals(playNumber)) {
+            offencePlay = "三分投篮";
+        } else if ("rate_2_shoot".equals(playNumber)) {
+            offencePlay = "两分投篮";
+        } else if ("rate_layup".equals(playNumber)) {
+            offencePlay = "上篮";
+        } else if ("rate_postup".equals(playNumber)) {
+            offencePlay = "内线单打";
+        } else if ("rate_fast_break".equals(playNumber)) {
+            offencePlay = "快攻";
+        } else if ("rate_alleyoop".equals(playNumber)) {
+            offencePlay = "空中接力";
+        } else if ("rate_turnover".equals(playNumber)) {
+            offencePlay = "进攻失误";
+        } else offencePlay = "意外";
         setOffencePlay(offencePlay);
     }
 
@@ -125,6 +134,5 @@ public class GameRound {
         String play = this.getOffencePlay();
         return play;
     }
-
 
     }
